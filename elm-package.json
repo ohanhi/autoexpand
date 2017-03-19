@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.2",
     "summary": "A pure Elm auto expanding textarea",
     "repository": "https://github.com/ohanhi/autoexpand.git",
     "license": "BSD3",
@@ -7,7 +7,7 @@
         "src"
     ],
     "exposed-modules": [
-      "AutoExpand"
+        "AutoExpand"
     ],
     "dependencies": {
         "elm-lang/core": "5.1.1 <= v < 6.0.0",
