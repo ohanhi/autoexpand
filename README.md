@@ -17,4 +17,7 @@ package. This means the same two general rules apply:
 
 # Usage
 
-Take a look at the [example](https://github.com/ohanhi/autoexpand/blob/master/examples/Simple.elm) to get a good idea of how to use this.
+Take a look at the example to get a good idea of how to use this.
+
+- [Runnable version on Ellie](https://ellie-app.com/H5x9DC4J9ba1/0)
+- [Source code on GitHub](https://github.com/ohanhi/autoexpand/blob/master/examples/Simple.elm)
