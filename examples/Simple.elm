@@ -72,7 +72,8 @@ value.
 view : Model -> Html Msg
 view model =
     div [ containerStyle ]
-        [ AutoExpand.view config model.autoexpand model.inputText
+        [ p [] [ text "This textarea will expand as you type until it's 4 rows tall" ]
+        , AutoExpand.view config model.autoexpand model.inputText
         ]
 
 
