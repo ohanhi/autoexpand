@@ -19,5 +19,5 @@ package. This means the same two general rules apply:
 
 Take a look at the example to get a good idea of how to use this.
 
-- [Runnable version on Ellie](https://ellie-app.com/H5x9DC4J9ba1/0)
+- [Runnable version on Ellie](https://ellie-app.com/35rzD8CvHh9a1/1)
 - [Source code on GitHub](https://github.com/ohanhi/autoexpand/blob/master/examples/Simple.elm)
