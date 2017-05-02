@@ -1,4 +1,15 @@
-module AutoExpand exposing (Config, State, initState, config, view)
+module AutoExpand
+    exposing
+        ( Config
+        , State
+        , initState
+        , config
+        , withPlaceholder
+        , withClass
+        , withId
+        , withStyles
+        , view
+        )
 
 {-|
 This library lets you use automatically expanding textareas in Elm.
@@ -9,7 +20,7 @@ rows allowed and then becomes a scrollable box.
 @docs view
 
 # Configuration
-@docs config, Config
+@docs Config, config, withId, withClass, withPlaceholder, withStyles
 
 # State
 @docs State, initState
@@ -34,6 +45,9 @@ type alias ConfigInternal msg =
     , minRows : Int
     , maxRows : Int
     , styles : List ( String, String )
+    , placeholder : Maybe String
+    , id : Maybe String
+    , class : Maybe String
     }
 
 
@@ -61,7 +75,6 @@ A typical configuration might look like this:
             , lineHeight = 20
             , minRows = 1
             , maxRows = 4
-            , styles = [ ( "font-family", "sans-serif" ) ]
             }
 -}
 config :
@@ -70,11 +83,60 @@ config :
     , lineHeight : Float
     , minRows : Int
     , maxRows : Int
-    , styles : List ( String, String )
     }
     -> Config msg
 config values =
-    Config values
+    Config
+        { onInput = values.onInput
+        , padding = values.padding
+        , lineHeight = values.lineHeight
+        , minRows = values.minRows
+        , maxRows = values.maxRows
+        , styles = []
+        , placeholder = Nothing
+        , id = Nothing
+        , class = Nothing
+        }
+
+
+{-| Add inline styles for the textarea.
+
+    myConfig
+        |> withStyles [ ( "font-family", "sans-serif" ) ]
+-}
+withStyles : List ( String, String ) -> Config msg -> Config msg
+withStyles styles (Config configInternal) =
+    Config { configInternal | styles = styles }
+
+
+{-| Add the `placeholder` attribute to the configuration.
+
+    myConfig
+        |> withPlaceholder "Type a message here"
+-}
+withPlaceholder : String -> Config msg -> Config msg
+withPlaceholder string (Config configInternal) =
+    Config { configInternal | placeholder = Just string }
+
+
+{-| Add the `id` attribute to the configuration.
+
+    myConfig
+        |> withId "chat-message-textarea"
+-}
+withId : String -> Config msg -> Config msg
+withId string (Config configInternal) =
+    Config { configInternal | id = Just string }
+
+
+{-| Add the `class` attribute to the configuration.
+
+    myConfig
+        |> withClass "textarea has-inset-shadow"
+-}
+withClass : String -> Config msg -> Config msg
+withClass string (Config configInternal) =
+    Config { configInternal | class = Just string }
 
 
 {-| Sets up the initial `State` for the textarea using a `Config`.
@@ -92,13 +154,19 @@ initState (Config config) =
 -}
 view : Config msg -> State -> String -> Html msg
 view (Config config) (State rowCount) textValue =
-    textarea
-        [ on "input" (inputDecoder config)
-        , rows rowCount
-        , Html.Attributes.value textValue
-        , textareaStyles config rowCount
-        ]
-        []
+    textarea (attrs config rowCount textValue) []
+
+
+attrs : ConfigInternal msg -> Int -> String -> List (Html.Attribute msg)
+attrs config rowCount textValue =
+    (mapToList Html.Attributes.placeholder config.placeholder)
+        ++ (mapToList Html.Attributes.id config.id)
+        ++ (mapToList Html.Attributes.class config.class)
+        ++ [ on "input" (inputDecoder config)
+           , rows rowCount
+           , Html.Attributes.value textValue
+           , textareaStyles config rowCount
+           ]
 
 
 getRows : ConfigInternal msg -> Int -> Int
@@ -131,3 +199,10 @@ textareaStyles config rowCount =
              )
            ]
         |> style
+
+
+mapToList : (a -> b) -> Maybe a -> List b
+mapToList f =
+    Maybe.map (\a -> [ a ])
+        >> Maybe.withDefault []
+        >> List.map f

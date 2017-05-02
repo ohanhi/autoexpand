@@ -2,7 +2,7 @@ module Main exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (style)
-import AutoExpand
+import AutoExpand exposing (withStyles, withPlaceholder)
 
 
 {-| Make a message for the AutoExpand updates.
@@ -26,8 +26,9 @@ config =
         , lineHeight = 20
         , minRows = 1
         , maxRows = 4
-        , styles = []
         }
+        |> withStyles [ ( "font-family", "sans-serif" ) ]
+        |> withPlaceholder "Start writing.."
 
 
 {-| Our model holds the `AutoExpand.State` and serves as the source of truth for
