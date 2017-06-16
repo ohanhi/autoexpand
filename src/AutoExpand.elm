@@ -2,34 +2,46 @@ module AutoExpand
     exposing
         ( Config
         , State
-        , initState
+        , attributes
         , config
-        , withPlaceholder
+        , initState
+        , view
         , withClass
         , withId
+        , withPlaceholder
         , withStyles
-        , view
         )
 
-{-|
-This library lets you use automatically expanding textareas in Elm.
+{-| This library lets you use automatically expanding textareas in Elm.
 This means the textarea grows in height until it reaches the maximum number of
 rows allowed and then becomes a scrollable box.
 
+
 # View
+
 @docs view
 
+
 # Configuration
+
 @docs Config, config, withId, withClass, withPlaceholder, withStyles
 
+
 # State
+
 @docs State, initState
+
+
+# Custom textareas
+
+@docs attributes
+
 -}
 
-import Html exposing (Html, div, p, br, textarea, text)
+import Html exposing (Html, br, div, p, text, textarea)
 import Html.Attributes exposing (rows, style)
-import Html.Events exposing (onInput, on)
-import Json.Decode exposing (Decoder, field, at, map, map2, int, string)
+import Html.Events exposing (on, onInput)
+import Json.Decode exposing (Decoder, at, field, int, map, map2, string)
 
 
 {-| Keeps track of how many rows we need.
@@ -53,8 +65,9 @@ type alias ConfigInternal msg =
 
 {-| Configuration for your textarea, describing the look and feel.
 
-**Note:** Your `Config` should *never* be held in your model.
+**Note:** Your `Config` should _never_ be held in your model.
 It should only appear in `view` code.
+
 -}
 type Config msg
     = Config (ConfigInternal msg)
@@ -76,6 +89,7 @@ A typical configuration might look like this:
             , minRows = 1
             , maxRows = 4
             }
+
 -}
 config :
     { onInput : { textValue : String, state : State } -> msg
@@ -103,6 +117,7 @@ config values =
 
     myConfig
         |> withStyles [ ( "font-family", "sans-serif" ) ]
+
 -}
 withStyles : List ( String, String ) -> Config msg -> Config msg
 withStyles styles (Config configInternal) =
@@ -113,6 +128,7 @@ withStyles styles (Config configInternal) =
 
     myConfig
         |> withPlaceholder "Type a message here"
+
 -}
 withPlaceholder : String -> Config msg -> Config msg
 withPlaceholder string (Config configInternal) =
@@ -123,6 +139,7 @@ withPlaceholder string (Config configInternal) =
 
     myConfig
         |> withId "chat-message-textarea"
+
 -}
 withId : String -> Config msg -> Config msg
 withId string (Config configInternal) =
@@ -133,6 +150,7 @@ withId string (Config configInternal) =
 
     myConfig
         |> withClass "textarea has-inset-shadow"
+
 -}
 withClass : String -> Config msg -> Config msg
 withClass string (Config configInternal) =
@@ -151,17 +169,31 @@ initState (Config config) =
     view : Model -> Html Msg
     view model =
         AutoExpand.view config model.autoExpandState model.textValue
+
 -}
 view : Config msg -> State -> String -> Html msg
-view (Config config) (State rowCount) textValue =
-    textarea (attrs config rowCount textValue) []
+view config state textValue =
+    textarea (attributes config state textValue) []
 
 
-attrs : ConfigInternal msg -> Int -> String -> List (Html.Attribute msg)
-attrs config rowCount textValue =
-    (mapToList Html.Attributes.placeholder config.placeholder)
-        ++ (mapToList Html.Attributes.id config.id)
-        ++ (mapToList Html.Attributes.class config.class)
+{-| Get the attributes needed for a custom textarea. Note that you may
+accidentally break functionality by including some attributes twice.
+
+    textarea
+        ([ placeholder "Custom..." ]
+            ++ AutoExpand.attributes
+                myConfig
+                model.autoExpandState
+                model.textValue
+        )
+        []
+
+-}
+attributes : Config msg -> State -> String -> List (Html.Attribute msg)
+attributes (Config config) (State rowCount) textValue =
+    mapToList Html.Attributes.placeholder config.placeholder
+        ++ mapToList Html.Attributes.id config.id
+        ++ mapToList Html.Attributes.class config.class
         ++ [ on "input" (inputDecoder config)
            , rows rowCount
            , Html.Attributes.value textValue
