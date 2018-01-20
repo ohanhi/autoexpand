@@ -1,5 +1,5 @@
 {
-    "version": "2.1.0",
+    "version": "2.1.1",
     "summary": "A pure Elm auto expanding textarea",
     "repository": "https://github.com/ohanhi/autoexpand.git",
     "license": "BSD3",
