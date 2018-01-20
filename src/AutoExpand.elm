@@ -229,6 +229,7 @@ textareaStyles config rowCount =
                else
                 "scroll-y"
              )
+           , ( "overflow-x", "hidden" )
            ]
         |> style
 
