@@ -1,15 +1,17 @@
 module Main exposing (..)
 
+import AutoExpand exposing (withAttribute)
+import Browser
 import Html exposing (..)
-import Html.Attributes exposing (style)
-import AutoExpand exposing (withStyles, withPlaceholder)
+import Html.Attributes exposing (placeholder, style)
 
 
 {-| Make a message for the AutoExpand updates.
 
 Note how it has a record with two fields:
-- `textValue`, the current inputted text in the textarea
-- `state`, the new internal state for the AutoExpand
+
+  - `textValue`, the current inputted text in the textarea
+  - `state`, the new internal state for the AutoExpand
 
 -}
 type Msg
@@ -27,8 +29,8 @@ config =
         , minRows = 1
         , maxRows = 4
         }
-        |> withStyles [ ( "font-family", "sans-serif" ) ]
-        |> withPlaceholder "Start writing.."
+        |> withAttribute (style "font-family" "sans-serif")
+        |> withAttribute (placeholder "Start writing..")
 
 
 {-| Our model holds the `AutoExpand.State` and serves as the source of truth for
@@ -42,28 +44,24 @@ type alias Model =
 
 {-| The initial state for the AutoExpand needs the `Config`.
 -}
-init : ( Model, Cmd Msg )
+init : Model
 init =
-    ( { autoexpand = AutoExpand.initState config
-      , inputText = ""
-      }
-    , Cmd.none
-    )
+    { autoexpand = AutoExpand.initState config
+    , inputText = ""
+    }
 
 
 {-| In update, be sure to update both the AutoExpand state and the inputted
 text value.
 -}
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Model
 update msg model =
     case msg of
         AutoExpandInput { state, textValue } ->
-            ( { model
+            { model
                 | autoexpand = state
                 , inputText = textValue
-              }
-            , Cmd.none
-            )
+            }
 
 
 {-| AutoExpand's view takes in the `Config`, the `State` and the current text
@@ -71,32 +69,30 @@ value.
 -}
 view : Model -> Html Msg
 view model =
-    div [ containerStyle ]
+    div containerStyles
         [ p [] [ text "This textarea will expand as you type until it's 4 rows tall" ]
         , AutoExpand.view config model.autoexpand model.inputText
         ]
 
 
-containerStyle : Html.Attribute msg
-containerStyle =
-    style
-        [ ( "background-color", "rebeccapurple" )
-        , ( "color", "white" )
-        , ( "font-family", "sans-serif" )
-        , ( "width", "100vw" )
-        , ( "height", "100vh" )
-        , ( "display", "flex" )
-        , ( "align-items", "center" )
-        , ( "justify-content", "center" )
-        , ( "flex-direction", "column" )
-        ]
+containerStyles : List (Html.Attribute msg)
+containerStyles =
+    [ style "background-color" "rebeccapurple"
+    , style "color" "white"
+    , style "font-family" "sans-serif"
+    , style "width" "100vw"
+    , style "height" "100vh"
+    , style "display" "flex"
+    , style "align-items" "center"
+    , style "justify-content" "center"
+    , style "flex-direction" "column"
+    ]
 
 
-main : Program Never Model Msg
+main : Program () Model Msg
 main =
-    Html.program
+    Browser.sandbox
         { view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
         , init = init
         }

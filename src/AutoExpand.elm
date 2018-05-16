@@ -6,10 +6,7 @@ module AutoExpand
         , config
         , initState
         , view
-        , withClass
-        , withId
-        , withPlaceholder
-        , withStyles
+        , withAttribute
         )
 
 {-| This library lets you use automatically expanding textareas in Elm.
@@ -24,7 +21,7 @@ rows allowed and then becomes a scrollable box.
 
 # Configuration
 
-@docs Config, config, withId, withClass, withPlaceholder, withStyles
+@docs Config, config, withAttribute
 
 
 # State
@@ -56,7 +53,7 @@ type alias ConfigInternal msg =
     , lineHeight : Float
     , minRows : Int
     , maxRows : Int
-    , styles : List ( String, String )
+    , attributes : List (Html.Attribute msg)
     , placeholder : Maybe String
     , id : Maybe String
     , class : Maybe String
@@ -106,62 +103,30 @@ config values =
         , lineHeight = values.lineHeight
         , minRows = values.minRows
         , maxRows = values.maxRows
-        , styles = []
+        , attributes = []
         , placeholder = Nothing
         , id = Nothing
         , class = Nothing
         }
 
 
-{-| Add inline styles for the textarea.
+{-| Add your own attributes for the textarea.
 
     myConfig
-        |> withStyles [ ( "font-family", "sans-serif" ) ]
+        |> withAttribute (Html.Attributes.class "chat-textbox")
+        |> withAttribute (Html.Attributes.placeholder "jane.dow@example.com")
 
 -}
-withStyles : List ( String, String ) -> Config msg -> Config msg
-withStyles styles (Config configInternal) =
-    Config { configInternal | styles = styles }
-
-
-{-| Add the `placeholder` attribute to the configuration.
-
-    myConfig
-        |> withPlaceholder "Type a message here"
-
--}
-withPlaceholder : String -> Config msg -> Config msg
-withPlaceholder string (Config configInternal) =
-    Config { configInternal | placeholder = Just string }
-
-
-{-| Add the `id` attribute to the configuration.
-
-    myConfig
-        |> withId "chat-message-textarea"
-
--}
-withId : String -> Config msg -> Config msg
-withId string (Config configInternal) =
-    Config { configInternal | id = Just string }
-
-
-{-| Add the `class` attribute to the configuration.
-
-    myConfig
-        |> withClass "textarea has-inset-shadow"
-
--}
-withClass : String -> Config msg -> Config msg
-withClass string (Config configInternal) =
-    Config { configInternal | class = Just string }
+withAttribute : Html.Attribute msg -> Config msg -> Config msg
+withAttribute newAttribute (Config configInternal) =
+    Config { configInternal | attributes = newAttribute :: configInternal.attributes }
 
 
 {-| Sets up the initial `State` for the textarea using a `Config`.
 -}
 initState : Config msg -> State
-initState (Config config) =
-    State config.minRows
+initState (Config configInternal) =
+    State configInternal.minRows
 
 
 {-| Show the textarea on your page.
@@ -172,8 +137,8 @@ initState (Config config) =
 
 -}
 view : Config msg -> State -> String -> Html msg
-view config state textValue =
-    textarea (attributes config state textValue) []
+view conf state textValue =
+    textarea (attributes conf state textValue) []
 
 
 {-| Get the attributes needed for a custom textarea. Note that you may
@@ -190,48 +155,45 @@ accidentally break functionality by including some attributes twice.
 
 -}
 attributes : Config msg -> State -> String -> List (Html.Attribute msg)
-attributes (Config config) (State rowCount) textValue =
-    mapToList Html.Attributes.placeholder config.placeholder
-        ++ mapToList Html.Attributes.id config.id
-        ++ mapToList Html.Attributes.class config.class
-        ++ [ on "input" (inputDecoder config)
-           , rows rowCount
-           , Html.Attributes.value textValue
-           , textareaStyles config rowCount
-           ]
+attributes (Config configInternal) (State rowCount) textValue =
+    [ on "input" (inputDecoder configInternal)
+    , rows rowCount
+    , Html.Attributes.value textValue
+    ]
+        ++ configInternal.attributes
+        ++ textareaStyles configInternal rowCount
 
 
 getRows : ConfigInternal msg -> Int -> Int
-getRows config scrollHeight =
-    ((toFloat scrollHeight - 2 * config.padding) / config.lineHeight)
+getRows configInternal scrollHeight =
+    ((toFloat scrollHeight - 2 * configInternal.padding) / configInternal.lineHeight)
         |> ceiling
-        |> clamp config.minRows config.maxRows
+        |> clamp configInternal.minRows configInternal.maxRows
 
 
 inputDecoder : ConfigInternal msg -> Decoder msg
-inputDecoder config =
-    map2 (\t s -> config.onInput { textValue = t, state = s })
+inputDecoder configInternal =
+    map2 (\t s -> configInternal.onInput { textValue = t, state = s })
         (at [ "target", "value" ] string)
         (at [ "target", "scrollHeight" ] int
-            |> map (State << getRows config)
+            |> map (State << getRows configInternal)
         )
 
 
-textareaStyles : ConfigInternal msg -> Int -> Html.Attribute msg
-textareaStyles config rowCount =
-    config.styles
-        ++ [ ( "padding", toString config.padding ++ "px" )
-           , ( "box-sizing", "border-box" )
-           , ( "line-height", toString config.lineHeight ++ "px" )
-           , ( "overflow"
-             , if rowCount <= config.maxRows then
-                "visible"
-               else
-                "scroll-y"
-             )
-           , ( "overflow-x", "hidden" )
-           ]
-        |> style
+textareaStyles : ConfigInternal msg -> Int -> List (Html.Attribute msg)
+textareaStyles configInternal rowCount =
+    [ style "padding" (String.fromFloat configInternal.padding ++ "px")
+    , style "box-sizing" "border-box"
+    , style "line-height" (String.fromFloat configInternal.lineHeight ++ "px")
+    , style "overflow"
+        (if rowCount <= configInternal.maxRows then
+            "visible"
+
+         else
+            "scroll-y"
+        )
+    , style "overflow-x" "hidden"
+    ]
 
 
 mapToList : (a -> b) -> Maybe a -> List b
